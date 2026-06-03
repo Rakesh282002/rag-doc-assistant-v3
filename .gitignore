@@ -3,3 +3,7 @@
 __pycache__/
 *.pyc
 vector_store/
+uploads/*.pdf
+uploads/*.docx
+uploads/*.txt
+.streamlit/secrets.toml

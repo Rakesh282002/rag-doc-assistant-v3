@@ -4,7 +4,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- LLM / Embeddings ---
-GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+# Try Streamlit secrets first (for Streamlit Cloud), fall back to .env
+def _get_secret(key: str, default: str = "") -> str:
+    try:
+        import streamlit as st
+        return st.secrets.get(key, os.getenv(key, default))
+    except Exception:
+        return os.getenv(key, default)
+
+GOOGLE_API_KEY: str = _get_secret("GOOGLE_API_KEY")
 EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"   # local, no API calls
 CROSS_ENCODER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # local reranker
 
