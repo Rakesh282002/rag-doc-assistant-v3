@@ -1,6 +1,12 @@
-# AI Document Assistant — v2 (Gemini 2.0 Flash Live)
+# AI Document Assistant — v3 (Gemini 3.1 Flash-Lite + Semantic Cache)
 
-A local RAG (Retrieval-Augmented Generation) application that lets you upload documents and ask natural-language questions about them. This v2 edition uses **Gemini 2.0 Flash Live** (`gemini-2.0-flash-live-001`) with streaming enabled for faster time-to-first-token responses. Answers are grounded strictly in the uploaded content — no hallucination of information not present in the document.
+A local RAG (Retrieval-Augmented Generation) application that lets you upload documents and ask natural-language questions about them. This v3 edition uses **Gemini 3.1 Flash-Lite** (`gemini-3.1-flash-lite`) — a stable, cost-efficient multimodal model — and introduces a **semantic cache** layer that avoids redundant LLM calls for semantically similar questions. Answers are grounded strictly in the uploaded content — no hallucination of information not present in the document.
+
+### What's New in v3
+
+- **LLM upgrade** — switched from `gemini-2.0-flash-live-001` to `gemini-3.1-flash-lite` for better stability and cost efficiency.
+- **Semantic caching** — repeated or similar questions are served from cache (cosine similarity + LLM validation), reducing latency and API costs.
+- **Cache controls** — configurable similarity floor, TTL expiry, and LRU eviction to keep the cache fresh and bounded.
 
 ---
 
@@ -13,7 +19,7 @@ A local RAG (Retrieval-Augmented Generation) application that lets you upload do
 └───────────────────────┬─────────────────────────────────────────┘
                         │  HTTP (REST)
 ┌───────────────────────▼─────────────────────────────────────────┐
-│                     FastAPI Backend  (:8000)                    │
+│                     FastAPI Backend  (:8000)                     │
 │  POST /upload   GET /documents   DELETE /documents/{id}         │
 │  POST /ask                                                       │
 └───────────┬──────────────────────────────┬──────────────────────┘
@@ -21,14 +27,18 @@ A local RAG (Retrieval-Augmented Generation) application that lets you upload do
     ┌───────▼────────┐            ┌────────▼────────────┐
     │ document_       │            │  rag_pipeline.py    │
     │ processor.py    │            │                     │
-    │                 │            │  1. FAISS semantic  │
-    │  Resume:        │            │     search          │
-    │  section/role   │   chunks   │  2. BM25 keyword    │
-    │  chunking  ─────┼──────────► │     search          │
-    │                 │            │  3. Merge + dedup   │
-    │  Generic:       │            │  4. Cross-encoder   │
-    │  Recursive      │            │     reranking       │
-    │  splitter       │            │  5. Gemini LLM      │
+    │                 │            │  1. Semantic cache   │
+    │  Resume:        │            │     check (hit →    │
+    │  section/role   │   chunks   │     return cached)  │
+    │  chunking  ─────┼──────────► │  2. FAISS semantic  │
+    │                 │            │     search          │
+    │  Generic:       │            │  3. BM25 keyword    │
+    │  Recursive      │            │     search          │
+    │  splitter       │            │  4. Merge + dedup   │
+    │                 │            │  5. Cross-encoder   │
+    │                 │            │     reranking       │
+    │                 │            │  6. Gemini LLM      │
+    │                 │            │  7. Cache result    │
     └─────────────────┘            └─────────────────────┘
 ```
 
@@ -37,7 +47,8 @@ A local RAG (Retrieval-Augmented Generation) application that lets you upload do
 | Concern | Choice | Reason |
 |---|---|---|
 | Embeddings | `BAAI/bge-small-en-v1.5` (local) | Zero API calls, fast on CPU, 384-dim |
-| LLM | `gemini-2.0-flash-live-001` (streaming) | Low-latency live model, streaming responses |
+| LLM | `gemini-3.1-flash-lite` | Stable, cost-efficient multimodal model |
+| Semantic cache | Cosine similarity + LLM validation | Avoids redundant API calls for repeated questions |
 | Vector store | FAISS (local file) | No server needed, persists across restarts |
 | Keyword search | BM25 | Catches exact-match queries that semantic search misses |
 | Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2` (local) | Precise relevance scoring, no API calls |
@@ -48,17 +59,18 @@ A local RAG (Retrieval-Augmented Generation) application that lets you upload do
 ## Project Structure
 
 ```
-rag-doc-assistant/
+rag-doc-assistant-v3/
 ├── backend/
 │   ├── __init__.py
 │   ├── config.py               # All tunable settings in one place
 │   ├── document_processor.py   # Loaders + smart chunking
 │   ├── rag_pipeline.py         # Retrieval, reranking, LLM chain
+│   ├── semantic_cache.py       # Semantic caching layer (cosine + LLM validation)
 │   └── main.py                 # FastAPI app + REST endpoints
 ├── frontend/
 │   └── app.py                  # Streamlit chat UI
 ├── uploads/                    # Uploaded files + documents.json registry
-├── vector_store/               # FAISS index + chunks.pkl (auto-created)
+├── vector_store/               # FAISS index + chunks.pkl + semantic_cache.pkl
 ├── .env                        # API keys (not committed)
 ├── .env.example                # Template for .env
 └── requirements.txt
@@ -75,8 +87,8 @@ rag-doc-assistant/
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url>
-cd rag-doc-assistant
+git clone https://github.com/Rakesh282002/rag-doc-assistant-v3.git
+cd rag-doc-assistant-v3
 pip install -r requirements.txt
 ```
 
@@ -118,13 +130,16 @@ All settings live in `backend/config.py`:
 |---|---|---|
 | `EMBEDDING_MODEL` | `BAAI/bge-small-en-v1.5` | HuggingFace bi-encoder for FAISS indexing |
 | `CROSS_ENCODER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Reranker model |
-| `LLM_MODEL` | `gemini-2.0-flash-live-001` | Gemini Flash Live model (streaming enabled) |
+| `LLM_MODEL` | `gemini-3.1-flash-lite` | Gemini 3.1 Flash-Lite (stable, cost-efficient) |
 | `LLM_TEMPERATURE` | `0.3` | Lower = more factual, less creative |
 | `CHUNK_SIZE` | `1000` | Max characters per chunk (generic docs) |
 | `CHUNK_OVERLAP` | `200` | Overlap between consecutive chunks |
 | `INITIAL_RETRIEVAL_K` | `10` | Candidates fetched from each retriever |
 | `MAX_RETRIEVAL_DOCS` | `5` | Top chunks passed to LLM after reranking |
-| `SCORE_GAP` | `3.0` | Drop chunks more than this many points below the best reranker score |
+| `SCORE_GAP` | `5.0` | Drop chunks more than this many points below the best reranker score |
+| `CACHE_CANDIDATE_FLOOR` | `0.55` | Min cosine similarity to trigger cache LLM validation |
+| `CACHE_TTL_DAYS` | `7` | Days before a cache entry expires |
+| `CACHE_MAX_SIZE` | `500` | Max cache entries (LRU eviction beyond this) |
 
 ---
 
@@ -153,6 +168,10 @@ add_to_vector_store()
 User question
     │
     ▼
+Semantic cache lookup            ← cosine sim + LLM validation
+    │ (hit → return cached answer)
+    │ (miss ↓)
+    ▼
 FAISS similarity_search(k=10)   ← semantic candidates
     +
 BM25Retriever.invoke(k=10)      ← keyword candidates
@@ -171,6 +190,9 @@ _format_chunk()                  ← prefix metadata labels (Company/Role/Period
     │
     ▼
 Gemini LLM (LCEL chain)          ← strict grounded-answer prompt
+    │
+    ▼
+Store in semantic cache           ← for future similar questions
     │
     ▼
 { answer, sources }
@@ -323,4 +345,3 @@ rm -rf vector_store/
 ```
 
 Then re-upload all documents through the UI.
-"# rag-doc-assistant-v3" 
