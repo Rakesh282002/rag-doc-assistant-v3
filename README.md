@@ -245,10 +245,10 @@ Response 200:
 Request:  { "question": "What is his name?" }
 
 Response: {
-  "answer": "His name is Devarapu Bullivenkanna (Venkat Devarapu).",
+  "answer": "His name is Nakka Rakesh.",
   "sources": [
     {
-      "content": "Devarapu Bullivenkanna (Venkat Devarapu)...",
+      "content": "Nakka Rakesh...",
       "source": "uploads/ca85aead-....pdf",
       "page": 0
     }
