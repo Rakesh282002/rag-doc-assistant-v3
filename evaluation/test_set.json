@@ -1,0 +1,34 @@
+[
+  {
+    "question": "What is the candidate's name?",
+    "ground_truth": "Nakka Rakesh"
+  },
+  {
+    "question": "What are his technical skills?",
+    "ground_truth": "Update with actual skills from your resume"
+  },
+  {
+    "question": "What is his educational background?",
+    "ground_truth": "Update with actual education"
+  },
+  {
+    "question": "What is his current role?",
+    "ground_truth": "Update with actual current role"
+  },
+  {
+    "question": "What certifications does he have?",
+    "ground_truth": "Update with actual certifications"
+  },
+  {
+    "question": "What is his work experience?",
+    "ground_truth": "Update with actual experience summary"
+  },
+  {
+    "question": "What achievements has he received?",
+    "ground_truth": "Update with actual achievements"
+  },
+  {
+    "question": "What is his contact information?",
+    "ground_truth": "Update with actual contact info"
+  }
+]
