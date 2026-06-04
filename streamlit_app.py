@@ -94,7 +94,7 @@ with st.sidebar:
 
                         # Process document
                         raw_docs = load_document(filepath)
-                        chunks = split_documents(raw_docs, filepath)
+                        chunks = split_documents(raw_docs)
                         add_to_vector_store(chunks)
 
                         # Update registry
