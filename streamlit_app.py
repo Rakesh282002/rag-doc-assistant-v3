@@ -5,8 +5,10 @@ Directly imports backend logic — no separate FastAPI server needed.
 
 import os
 import sys
+import gc
 import uuid
 import json
+import shutil
 import tempfile
 
 import streamlit as st
@@ -14,7 +16,7 @@ import streamlit as st
 # Ensure project root is on path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from backend.config import UPLOAD_DIR, DOCUMENTS_REGISTRY, GOOGLE_API_KEY
+from backend.config import UPLOAD_DIR, DOCUMENTS_REGISTRY, VECTOR_STORE_DIR, GOOGLE_API_KEY
 from backend.document_processor import load_document, split_documents, SUPPORTED_EXTENSIONS
 from backend.rag_pipeline import add_to_vector_store, query_documents
 from backend.semantic_cache import get_cache
@@ -33,6 +35,51 @@ def _load_registry() -> list:
 def _save_registry(docs: list) -> None:
     with open(DOCUMENTS_REGISTRY, "w") as f:
         json.dump(docs, f, indent=2)
+
+
+def _rebuild_vector_store(registry: list) -> None:
+    """Wipe vector store and re-index all remaining documents."""
+    import backend.rag_pipeline as _rp
+
+    # Release any in-memory FAISS/embedding references so Windows unlocks files
+    _rp._embeddings_cache = None
+    _rp._cross_encoder_cache = None
+    gc.collect()
+
+    # Clear in-memory semantic cache
+    get_cache().clear()
+
+    # Clear FAISS index, chunks, and cache
+    faiss_dir = os.path.join(VECTOR_STORE_DIR, "faiss_index")
+    if os.path.exists(faiss_dir):
+        shutil.rmtree(faiss_dir, ignore_errors=True)
+        # If rmtree partially failed, remove remaining files individually
+        if os.path.exists(faiss_dir):
+            for f in os.listdir(faiss_dir):
+                try:
+                    os.remove(os.path.join(faiss_dir, f))
+                except OSError:
+                    pass
+            try:
+                os.rmdir(faiss_dir)
+            except OSError:
+                pass
+    chunks_path = os.path.join(VECTOR_STORE_DIR, "chunks.pkl")
+    if os.path.exists(chunks_path):
+        os.remove(chunks_path)
+    cache_path = os.path.join(VECTOR_STORE_DIR, "semantic_cache.pkl")
+    if os.path.exists(cache_path):
+        os.remove(cache_path)
+
+    # Re-index remaining documents
+    for doc in registry:
+        for ext in SUPPORTED_EXTENSIONS:
+            fpath = os.path.join(UPLOAD_DIR, f"{doc['id']}{ext}")
+            if os.path.exists(fpath):
+                raw_docs = load_document(fpath)
+                chunks = split_documents(raw_docs)
+                add_to_vector_store(chunks)
+                break
 
 
 # ---------------------------------------------------------------------------
@@ -85,6 +132,17 @@ with st.sidebar:
                     if ext not in SUPPORTED_EXTENSIONS:
                         st.error(f"Unsupported file type: {ext}")
                     else:
+                        # Clear previous data: vector store, cache, old files
+                        old_registry = _load_registry()
+                        for old_doc in old_registry:
+                            for old_ext in SUPPORTED_EXTENSIONS:
+                                old_fpath = os.path.join(UPLOAD_DIR, f"{old_doc['id']}{old_ext}")
+                                if os.path.exists(old_fpath):
+                                    os.remove(old_fpath)
+                                    break
+                        _save_registry([])
+                        _rebuild_vector_store([])  # wipes FAISS, chunks, cache
+
                         # Save uploaded file
                         doc_id = str(uuid.uuid4())
                         filename = f"{doc_id}{ext}"
@@ -97,14 +155,12 @@ with st.sidebar:
                         chunks = split_documents(raw_docs)
                         add_to_vector_store(chunks)
 
-                        # Update registry
-                        registry = _load_registry()
-                        registry.append({
+                        # Update registry (single document only)
+                        _save_registry([{
                             "id": doc_id,
                             "filename": uploaded_file.name,
                             "chunks": len(chunks),
-                        })
-                        _save_registry(registry)
+                        }])
 
                         st.success(f"✅ Indexed **{uploaded_file.name}** — {len(chunks)} chunks")
                         st.rerun()
@@ -121,7 +177,7 @@ with st.sidebar:
             col1.markdown(f"📄 **{doc['filename']}**")
             col1.caption(f"{doc['chunks']} chunks · id: {doc['id'][:8]}…")
             if col2.button("🗑️", key=f"del_{doc['id']}", help="Delete document"):
-                # Remove file
+                # Remove from registry
                 registry = _load_registry()
                 registry = [d for d in registry if d["id"] != doc["id"]]
                 _save_registry(registry)
@@ -131,6 +187,8 @@ with st.sidebar:
                     if os.path.exists(fpath):
                         os.remove(fpath)
                         break
+                # Rebuild vector store from remaining docs
+                _rebuild_vector_store(registry)
                 st.toast("Document deleted.", icon="🗑️")
                 st.rerun()
     else:
@@ -195,7 +253,7 @@ if question := st.chat_input("Ask a question about your documents…"):
     with st.chat_message("assistant"):
         with st.spinner("Searching documents and generating answer…"):
             try:
-                data = query_documents(question)
+                data = query_documents(question, chat_history=st.session_state.messages)
                 answer = data["answer"]
                 sources = data["sources"]
                 is_cached = data.get("cached", False)
