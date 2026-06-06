@@ -1,0 +1,282 @@
+{
+  "results": [
+    {
+      "question": "What is the candidate's name?",
+      "ground_truth": "Nakka Rakesh",
+      "answer": "NAKKA RAKESH",
+      "sources": [
+        {
+          "content": "ACHIEVEMENTS \n\u2022 Recognized as Star Performer (Q3 2025) at HealthEdge for outstanding performance. \n\u2022 Recognition of Best Performance Award in AI-ML Internship 2022. \n\u2022 Secured 1st place in college level Techthon 2022. \n\u2022 Secured 2nd place in Code Unscramble event in Techfleet 2023 conducted by CSI.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "EDUCATION\n Bachelor of Technology in Information Technology (Honors)            Bhimavaram, Andhra Pradesh  \nS.R.K.R. Engineering College          2020 \u2013 2024 \n\u2022 CGPA: 9.07/10 \nIntermediate               Palakol, Andhra Pradesh  \nAditya Junior College           2018 \u2013 2020 \n\u2022 Percentage: 94.2% \nSSC                Palakol, Andhra Pradesh  \nSunshine EM High School                     2018 \n\u2022 CGPA: 9...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "NAKKA RAKESH \nD.No:6-10-2, Sugar Colony, Palakol, West Godavari District, Andhra Pradesh, 534260 | \n : https://www.linkedin.com/in/rakesh -nakka |  : +91-7989329833 |  : rakeshnakka9999@gmail.com",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Achieved a test accuracy of 92% in evaluating the model's performance. \n\u2022 Evaluated model through recall score (95%), precision score (90%). \n\u2022 Technologies used: Python, scikit-learn, numpy, pandas, spacy.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Gained experience in data preprocessing and feature selection for optimized model inputs and enhanced \naccuracy. \n \nPROJECT EXPERIENCE \n  \nHeart Disease Prediction System Using Supervised Machine Learning Algorithms  | Link \n\u2022 Developed and deployed a user-friendly Heart Disease Prediction System website. \n\u2022 Applied and trained ML models such as Logistic Regression, Random Forest, SVM, KNN, and ...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 1.0,
+        "answer_correctness": 1.0,
+        "faithfulness": 1.0,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 16.01,
+        "cached": false
+      },
+      "latency": 16.01067499999772
+    },
+    {
+      "question": "What are his technical skills?",
+      "ground_truth": "Update with actual skills from your resume",
+      "answer": "Technical skills:\n\n*   **Programming Languages:** C (Basic), Java (Basic), Python (Intermediate)\n*   **Database Language:** MYSQL (Intermediate)\n*   **Performance & API Testing Tools:** Apache JMeter, Postman\n*   **Monitoring & Logging Tools:** Datadog, Graylog\n*   **Web Development:** HTML (Intermediate), CSS (Basic), Javascript (Basic)\n*   **Python Web Framework:** Flask\n*   **Packages:** NumPy, Pandas, Matplotlib, Seaborn, Keras, Tensorflow, Librosa, Spacy, NLTK\n*   **Algorithms:** Linear Regression, Logistic Regression, Decision Tree, Random Forest, K Nearest Neighbors, Support Vectors Machine, PCA, CNN, RNN, LSTM, GRU, Transformers",
+      "sources": [
+        {
+          "content": "SKILLS \n \n\u2022 Programming Languages: Basic: C, Java \n   Intermediate: Python \n\u2022 Database Language: MYSQL(Intermediate) \n\u2022 Performance & API Testing Tools: Apache JMeter, Postman \n\u2022 Monitoring & Logging Tools: Datadog, Graylog \n\u2022 Web Development: HTML(Intermediate), CSS(Basic), Javascript (Basic) \n\u2022 Python Web Framework: Flask \n\u2022 Packages: NumPy, Pandas, Matplotlib, Seaborn, Keras, Tensorflow, Libros...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 0.6106,
+        "answer_correctness": 0.0,
+        "faithfulness": 0.5556,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 6.09,
+        "cached": false
+      },
+      "latency": 6.092829000001075
+    },
+    {
+      "question": "What is his educational background?",
+      "ground_truth": "Update with actual education",
+      "answer": "His educational background is as follows:\n\n*   **Bachelor of Technology in Information Technology (Honors):** S.R.K.R. Engineering College, Bhimavaram, Andhra Pradesh (2020 \u2013 2024); CGPA: 9.07/10.\n*   **Intermediate:** Aditya Junior College, Palakol, Andhra Pradesh (2018 \u2013 2020); Percentage: 94.2%.\n*   **SSC:** Sunshine EM High School, Palakol, Andhra Pradesh (2018); CGPA: 9.8/10.",
+      "sources": [
+        {
+          "content": "EDUCATION\n Bachelor of Technology in Information Technology (Honors)            Bhimavaram, Andhra Pradesh  \nS.R.K.R. Engineering College          2020 \u2013 2024 \n\u2022 CGPA: 9.07/10 \nIntermediate               Palakol, Andhra Pradesh  \nAditya Junior College           2018 \u2013 2020 \n\u2022 Percentage: 94.2% \nSSC                Palakol, Andhra Pradesh  \nSunshine EM High School                     2018 \n\u2022 CGPA: 9...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "CERTIFICATIONS \n\u2022 Data Science and AI Campus Program by Surge Classes. \n\u2022 Data Analytics with Python by NPTEL. \n\u2022 Data Science For Engineers by NPTEL. \n\u2022 Certificate on Programming Essentials In Python by Cisco.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "ACHIEVEMENTS \n\u2022 Recognized as Star Performer (Q3 2025) at HealthEdge for outstanding performance. \n\u2022 Recognition of Best Performance Award in AI-ML Internship 2022. \n\u2022 Secured 1st place in college level Techthon 2022. \n\u2022 Secured 2nd place in Code Unscramble event in Techfleet 2023 conducted by CSI.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Achieved a test accuracy of 92% in evaluating the model's performance. \n\u2022 Evaluated model through recall score (95%), precision score (90%). \n\u2022 Technologies used: Python, scikit-learn, numpy, pandas, spacy.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "NAKKA RAKESH \nD.No:6-10-2, Sugar Colony, Palakol, West Godavari District, Andhra Pradesh, 534260 | \n : https://www.linkedin.com/in/rakesh -nakka |  : +91-7989329833 |  : rakeshnakka9999@gmail.com",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 0.5247,
+        "answer_correctness": 0.0,
+        "faithfulness": 0.6364,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 4.6,
+        "cached": false
+      },
+      "latency": 4.595062500011409
+    },
+    {
+      "question": "What is his current role?",
+      "ground_truth": "Update with actual current role",
+      "answer": "Associate Software Engineer In Test",
+      "sources": [
+        {
+          "content": "Associate Software Engineer In Test                Hyderabad, Telangana \nHealthEdge Software Pvt Ltd            Jan 2024 \u2013 Present \n\u2022 Designed and executed performance/load tests for the company\u2019s product, as well as SPs and LINQs, using \nApache JMeter to identify latency patterns and system breakpoints. \n\u2022 Developed Python automation scripts to streamline performance reporting, including day -wis...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "manual monitoring effort by 80\u201390% and enabling faster response to SLA breaches. \n\u2022 Monitored production environments via Datadog to detect errors and coordinate quick fixes with development \nteams. \n\u2022 Key Tools & Technologies: Apache JMeter, Python, Datadog, Graylog, Excel, MySQL, Postman \n  \nAI-ML Intern                   Bhimavaram, Andhra Pradesh  \nHenotic Technology Pvt Ltd           July 202...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Gained experience in data preprocessing and feature selection for optimized model inputs and enhanced \naccuracy. \n \nPROJECT EXPERIENCE \n  \nHeart Disease Prediction System Using Supervised Machine Learning Algorithms  | Link \n\u2022 Developed and deployed a user-friendly Heart Disease Prediction System website. \n\u2022 Applied and trained ML models such as Logistic Regression, Random Forest, SVM, KNN, and ...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Achieved a test accuracy of 92% in evaluating the model's performance. \n\u2022 Evaluated model through recall score (95%), precision score (90%). \n\u2022 Technologies used: Python, scikit-learn, numpy, pandas, spacy.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Trained the CNN model using the extracted features and corresponding emotion labels. \n\u2022 Achieved a test accuracy of 55% in evaluating the model's performance. \n\u2022 Evaluated model through recall score (55%), precision score (56%). \n\u2022 Technologies used: Python, scikit-learn, pandas, Matplotlib, Keras, Librosa \n \nEmail Spam Detection \n\u2022 Developed a Logistic Regression model on email spam detection u...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 0.5198,
+        "answer_correctness": 0.0,
+        "faithfulness": 1.0,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 4.15,
+        "cached": false
+      },
+      "latency": 4.153960700001335
+    },
+    {
+      "question": "What certifications does he have?",
+      "ground_truth": "Update with actual certifications",
+      "answer": "He has the following certifications:\n\u2022 Data Science and AI Campus Program by Surge Classes\n\u2022 Data Analytics with Python by NPTEL\n\u2022 Data Science For Engineers by NPTEL\n\u2022 Certificate on Programming Essentials In Python by Cisco",
+      "sources": [
+        {
+          "content": "CERTIFICATIONS \n\u2022 Data Science and AI Campus Program by Surge Classes. \n\u2022 Data Analytics with Python by NPTEL. \n\u2022 Data Science For Engineers by NPTEL. \n\u2022 Certificate on Programming Essentials In Python by Cisco.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 0.6216,
+        "answer_correctness": 0.25,
+        "faithfulness": 0.8,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 4.69,
+        "cached": false
+      },
+      "latency": 4.6919035999744665
+    },
+    {
+      "question": "What is his work experience?",
+      "ground_truth": "Update with actual experience summary",
+      "answer": "The individual's work experience is as follows:\n\n*   **Associate Software Engineer In Test** at HealthEdge Software Pvt Ltd (Hyderabad, Telangana): January 2024 \u2013 Present\n    *   Designed and executed performance/load tests for the company\u2019s product, SPs, and LINQs using Apache JMeter to identify latency patterns and system breakpoints.\n    *   Developed Python automation scripts to streamline performance reporting (day-wise SLA and Graylog reports, JTL-to-Excel conversion, parameter verification, and IIS log\u2013based SLA tracking), reducing manual effort by 70%.\n    *   Implemented real-time SLA monitoring in Datadog with automated alerts to Microsoft Teams, reducing manual monitoring effort by 80\u201390% and enabling faster response to SLA breaches.\n    *   Monitored production environments via Datadog to detect errors and coordinate quick fixes with development teams.\n\n*   **AI-ML Intern** at Henotic Technology Pvt Ltd (Bhimavaram, Andhra Pradesh): July 2022 \u2013 September 2022\n    *   Developed a strong foundation in building ML models using various algorithms to predict target variables in datasets.\n    *   Demonstrated ability to analyze and improve model performance by selecting the best model based on accuracy, precision, and recall.\n    *   Gained experience in data preprocessing and feature selection for optimized model inputs and enhanced accuracy.",
+      "sources": [
+        {
+          "content": "manual monitoring effort by 80\u201390% and enabling faster response to SLA breaches. \n\u2022 Monitored production environments via Datadog to detect errors and coordinate quick fixes with development \nteams. \n\u2022 Key Tools & Technologies: Apache JMeter, Python, Datadog, Graylog, Excel, MySQL, Postman \n  \nAI-ML Intern                   Bhimavaram, Andhra Pradesh  \nHenotic Technology Pvt Ltd           July 202...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Gained experience in data preprocessing and feature selection for optimized model inputs and enhanced \naccuracy. \n \nPROJECT EXPERIENCE \n  \nHeart Disease Prediction System Using Supervised Machine Learning Algorithms  | Link \n\u2022 Developed and deployed a user-friendly Heart Disease Prediction System website. \n\u2022 Applied and trained ML models such as Logistic Regression, Random Forest, SVM, KNN, and ...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "Associate Software Engineer In Test                Hyderabad, Telangana \nHealthEdge Software Pvt Ltd            Jan 2024 \u2013 Present \n\u2022 Designed and executed performance/load tests for the company\u2019s product, as well as SPs and LINQs, using \nApache JMeter to identify latency patterns and system breakpoints. \n\u2022 Developed Python automation scripts to streamline performance reporting, including day -wis...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Achieved a test accuracy of 92% in evaluating the model's performance. \n\u2022 Evaluated model through recall score (95%), precision score (90%). \n\u2022 Technologies used: Python, scikit-learn, numpy, pandas, spacy.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "\u2022 Trained the CNN model using the extracted features and corresponding emotion labels. \n\u2022 Achieved a test accuracy of 55% in evaluating the model's performance. \n\u2022 Evaluated model through recall score (55%), precision score (56%). \n\u2022 Technologies used: Python, scikit-learn, pandas, Matplotlib, Keras, Librosa \n \nEmail Spam Detection \n\u2022 Developed a Logistic Regression model on email spam detection u...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 0.5533,
+        "answer_correctness": 0.4,
+        "faithfulness": 0.7,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 4.87,
+        "cached": false
+      },
+      "latency": 4.866906000010204
+    },
+    {
+      "question": "What achievements has he received?",
+      "ground_truth": "Update with actual achievements",
+      "answer": "The achievements are:\n\u2022 Recognized as Star Performer (Q3 2025) at HealthEdge.\n\u2022 Best Performance Award in AI-ML Internship 2022.\n\u2022 1st place in college level Techthon 2022.\n\u2022 2nd place in Code Unscramble event in Techfleet 2023 conducted by CSI.",
+      "sources": [
+        {
+          "content": "ACHIEVEMENTS \n\u2022 Recognized as Star Performer (Q3 2025) at HealthEdge for outstanding performance. \n\u2022 Recognition of Best Performance Award in AI-ML Internship 2022. \n\u2022 Secured 1st place in college level Techthon 2022. \n\u2022 Secured 2nd place in Code Unscramble event in Techfleet 2023 conducted by CSI.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 0.5631,
+        "answer_correctness": 0.25,
+        "faithfulness": 1.0,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 4.26,
+        "cached": false
+      },
+      "latency": 4.25849640002707
+    },
+    {
+      "question": "What is his contact information?",
+      "ground_truth": "Update with actual contact info",
+      "answer": "Phone: +91-7989329833\nEmail: rakeshnakka9999@gmail.com\nLinkedIn: https://www.linkedin.com/in/rakesh -nakka",
+      "sources": [
+        {
+          "content": "NAKKA RAKESH \nD.No:6-10-2, Sugar Colony, Palakol, West Godavari District, Andhra Pradesh, 534260 | \n : https://www.linkedin.com/in/rakesh -nakka |  : +91-7989329833 |  : rakeshnakka9999@gmail.com",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "Associate Software Engineer In Test                Hyderabad, Telangana \nHealthEdge Software Pvt Ltd            Jan 2024 \u2013 Present \n\u2022 Designed and executed performance/load tests for the company\u2019s product, as well as SPs and LINQs, using \nApache JMeter to identify latency patterns and system breakpoints. \n\u2022 Developed Python automation scripts to streamline performance reporting, including day -wis...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "EDUCATION\n Bachelor of Technology in Information Technology (Honors)            Bhimavaram, Andhra Pradesh  \nS.R.K.R. Engineering College          2020 \u2013 2024 \n\u2022 CGPA: 9.07/10 \nIntermediate               Palakol, Andhra Pradesh  \nAditya Junior College           2018 \u2013 2020 \n\u2022 Percentage: 94.2% \nSSC                Palakol, Andhra Pradesh  \nSunshine EM High School                     2018 \n\u2022 CGPA: 9...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "ACHIEVEMENTS \n\u2022 Recognized as Star Performer (Q3 2025) at HealthEdge for outstanding performance. \n\u2022 Recognition of Best Performance Award in AI-ML Internship 2022. \n\u2022 Secured 1st place in college level Techthon 2022. \n\u2022 Secured 2nd place in Code Unscramble event in Techfleet 2023 conducted by CSI.",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        },
+        {
+          "content": "manual monitoring effort by 80\u201390% and enabling faster response to SLA breaches. \n\u2022 Monitored production environments via Datadog to detect errors and coordinate quick fixes with development \nteams. \n\u2022 Key Tools & Technologies: Apache JMeter, Python, Datadog, Graylog, Excel, MySQL, Postman \n  \nAI-ML Intern                   Bhimavaram, Andhra Pradesh  \nHenotic Technology Pvt Ltd           July 202...",
+          "source": "uploads\\1b732c68-1433-4e95-8a0e-cb3219a87a3b.pdf",
+          "page": "N/A"
+        }
+      ],
+      "metrics": {
+        "answer_similarity": 0.5983,
+        "answer_correctness": 0.0,
+        "faithfulness": 1.0,
+        "retrieval_hit_rate": 1.0,
+        "latency_s": 5.53,
+        "cached": false
+      },
+      "latency": 5.532613000017591
+    }
+  ],
+  "aggregate": {
+    "avg_answer_similarity": 0.6239,
+    "avg_answer_correctness": 0.2375,
+    "avg_faithfulness": 0.8365,
+    "avg_retrieval_hit_rate": 1.0,
+    "avg_latency_s": 6.28,
+    "cache_hit_rate": 0.0,
+    "total_questions": 8,
+    "successful": 8
+  }
+}

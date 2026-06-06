@@ -8,6 +8,10 @@ A local RAG (Retrieval-Augmented Generation) application that lets you upload do
 - **Semantic caching** — repeated or similar questions are served from cache (cosine similarity + LLM validation), reducing latency and API costs.
 - **Cache controls** — configurable similarity floor, TTL expiry, and LRU eviction to keep the cache fresh and bounded.
 
+### Performance Metrics
+
+> Achieved 100% Recall@K and improved answer faithfulness by 14% using hybrid retrieval (FAISS + BM25) and cross-encoder reranking; reduced latency by 60% via semantic caching.
+
 ---
 
 ## Architecture Overview

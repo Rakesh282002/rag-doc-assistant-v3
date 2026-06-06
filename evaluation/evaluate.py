@@ -46,27 +46,109 @@ from backend.semantic_cache import get_cache
 # ---------------------------------------------------------------------------
 
 DEFAULT_TEST_SET = [
-    {
-        "question": "What is the candidate's name?",
-        "ground_truth": "Nakka Rakesh",
-    },
-    {
-        "question": "What are his technical skills?",
-        "ground_truth": "Python, AWS, Java",  # Update with actual skills
-    },
-    {
-        "question": "What is his educational background?",
-        "ground_truth": "Bachelor's degree",  # Update with actual education
-    },
-    {
-        "question": "What is his current role?",
-        "ground_truth": "Software Engineer",  # Update with actual role
-    },
-    {
-        "question": "What certifications does he have?",
-        "ground_truth": "AWS Certified",  # Update with actual certs
-    },
+{
+"question": "What is the candidate's name?",
+"ground_truth": "Nakka Rakesh",
+},
+{
+"question": "What is his current role?",
+"ground_truth": "Associate Software Engineer In Test at HealthEdge Software Pvt Ltd",
+},
+{
+"question": "Where does he work?",
+"ground_truth": "HealthEdge Software Pvt Ltd",
+},
+{
+"question": "What is his educational qualification?",
+"ground_truth": "Bachelor of Technology in Information Technology (Honors)",
+},
+{
+"question": "Which college did he attend?",
+"ground_truth": "S.R.K.R. Engineering College",
+},
+{
+"question": "What is his CGPA in B.Tech?",
+"ground_truth": "9.07",
+},
+{
+"question": "What are his primary programming skills?",
+"ground_truth": "Python, Java, C",
+},
+{
+"question": "What tools does he use for performance testing?",
+"ground_truth": "Apache JMeter, Postman",
+},
+{
+"question": "What monitoring tools has he worked with?",
+"ground_truth": "Datadog, Graylog",
+},
+{
+"question": "What is one of his key achievements?",
+"ground_truth": "Star Performer (Q3 2025) at HealthEdge",
+},
+{
+"question": "What certifications does he have?",
+"ground_truth": "Data Science and AI Campus Program, Data Analytics with Python (NPTEL), Data Science for Engineers (NPTEL), Programming Essentials in Python (Cisco)",
+},
+{
+"question": "What project did he build for healthcare prediction?",
+"ground_truth": "Heart Disease Prediction System using machine learning",
+},
+
+# ---- Additional Questions ----
+
+{
+    "question": "What internship experience does he have?",
+    "ground_truth": "AI-ML Intern at Henotic Technology Pvt Ltd",
+},
+{
+    "question": "What did he achieve during his internship?",
+    "ground_truth": "Built ML models, improved performance using accuracy, precision, recall, and performed data preprocessing and feature selection",
+},
+{
+    "question": "What technologies does he use in his current job?",
+    "ground_truth": "Apache JMeter, Python, Datadog, Graylog, Excel, MySQL, Postman",
+},
+{
+    "question": "How did he reduce manual effort in reporting?",
+    "ground_truth": "By developing Python automation scripts for performance reporting, reducing effort by 70%",
+},
+{
+    "question": "How did he improve SLA monitoring?",
+    "ground_truth": "Implemented real-time SLA monitoring in Datadog with automated alerts, reducing manual effort by 80–90%",
+},
+{
+    "question": "What is his experience in machine learning?",
+    "ground_truth": "Built ML models using algorithms like Logistic Regression, Random Forest, SVM, KNN, and XGBoost",
+},
+{
+    "question": "Which model performed best in his heart disease project?",
+    "ground_truth": "XGBoost with 83.26% accuracy and 0.82 F1-score",
+},
+{
+    "question": "What NLP techniques did he use in spam detection?",
+    "ground_truth": "Stop word removal, lemmatization, and TF-IDF vectorization",
+},
+{
+    "question": "What deep learning technique did he use for emotion recognition?",
+    "ground_truth": "CNN with MFCC feature extraction",
+},
+{
+    "question": "What is his experience with databases?",
+    "ground_truth": "MySQL (Intermediate)",
+},
+{
+    "question": "What awards has he received in college?",
+    "ground_truth": "1st place in Techthon 2022 and 2nd place in Code Unscramble at Techfleet 2023",
+},
+{
+    "question": "What web technologies does he know?",
+    "ground_truth": "HTML, CSS, JavaScript, Flask",
+},
+
+
 ]
+
 
 
 # ---------------------------------------------------------------------------

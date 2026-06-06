@@ -13,21 +13,21 @@ def _get_secret(key: str, default: str = "") -> str:
         return os.getenv(key, default)
 
 GOOGLE_API_KEY: str = _get_secret("GOOGLE_API_KEY")
-EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"   # local, no API calls
+EMBEDDING_MODEL: str = "BAAI/bge-base-en-v1.5"     # 768-dim, better retrieval than bge-small
 CROSS_ENCODER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # local reranker
 
 # Gemini 3.1 Flash-Lite — stable, cost-efficient multimodal model.
 LLM_MODEL: str = "gemini-3.1-flash-lite"
-LLM_TEMPERATURE: float = 0.3
+LLM_TEMPERATURE: float = 0.1
 
 # --- Chunking ---
-CHUNK_SIZE: int = 1000
-CHUNK_OVERLAP: int = 200
+CHUNK_SIZE: int = 800
+CHUNK_OVERLAP: int = 150
 
 # --- Retrieval ---
-INITIAL_RETRIEVAL_K: int = 10    # candidates from each retriever before reranking
+INITIAL_RETRIEVAL_K: int = 15    # candidates from each retriever before reranking
 MAX_RETRIEVAL_DOCS: int = 5      # top chunks after reranking sent to LLM
-SCORE_GAP: float = 5.0           # only keep chunks within this many points of the best score
+SCORE_GAP: float = 3.0           # tighter gap — only keep chunks close to best score
 
 # --- Semantic Cache ---
 # Any candidate with cosine similarity >= floor is passed to the LLM validator.

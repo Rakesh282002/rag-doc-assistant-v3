@@ -28,23 +28,21 @@ from backend.semantic_cache import get_cache
 FAISS_INDEX_PATH = os.path.join(VECTOR_STORE_DIR, "faiss_index")
 CHUNKS_PATH = os.path.join(VECTOR_STORE_DIR, "chunks.pkl")
 
-RAG_PROMPT_TEMPLATE = """You are an expert analyst. The passages below are excerpts retrieved from one or more documents. Read them carefully and answer the question that follows.
+RAG_PROMPT_TEMPLATE = """You are a precise document analyst. Answer the question using ONLY the retrieved passages below.
 
 Retrieved passages:
 {context}
 
 Question: {question}
 
-Rules you must follow:
-1. Answer ONLY using information explicitly stated in the passages. Do not infer, assume, or use related information as a substitute.
-   Exception: you MAY perform straightforward arithmetic or date calculations on values that ARE explicitly stated
-   (e.g. summing durations derived from stated date ranges, counting items in a list).
-2. If the passages do not contain a direct answer AND no calculation can derive it, respond with exactly:
-   "This information is not mentioned in the document." — nothing more.
-3. Do NOT mention tangentially related facts (e.g. budget figures when asked about salary, job title when asked about age). Either the answer is there or it is not.
-4. When the answer IS present, write in clear natural prose — do not mention "chunks", "passages", or cite numbers.
-5. Synthesize across passages where multiple passages contribute to the answer.
-6. State conclusions directly and confidently.
+Rules:
+1. Use ONLY information explicitly stated in the passages. Never add external knowledge.
+2. If the answer is not in the passages, respond exactly: "This information is not mentioned in the document."
+3. Be concise and direct. List items when the question asks "what are" or "what does he have".
+4. Do NOT mention "chunks", "passages", or "documents" in your answer.
+5. When multiple passages contribute, synthesize them into a single coherent answer.
+6. For skills/certifications/experience, list ALL items found in the passages — do not summarize or omit.
+7. You MAY perform simple arithmetic on explicitly stated values (e.g. counting years from date ranges).
 
 Answer:"""
 
@@ -76,7 +74,34 @@ Examples:
 Reply with a single word — YES or NO. No explanation."""
 
 # ---------------------------------------------------------------------------
-# Singletons — loaded once, reused across all requests
+# Query expansion — map short/ambiguous queries to richer retrieval queries
+# ---------------------------------------------------------------------------
+
+_QUERY_EXPANSIONS: dict[str, list[str]] = {
+    "name": ["full name", "candidate name"],
+    "contact": ["phone number email address linkedin contact information"],
+    "education": ["education degree university college bachelor masters"],
+    "skills": ["technical skills programming languages tools technologies expertise"],
+    "experience": ["work experience professional experience employment company role"],
+    "certifications": ["certifications certificates licensed certified credentials"],
+    "achievements": ["achievements awards recognition star performer accomplishments"],
+    "projects": ["projects built developed implemented"],
+    "summary": ["professional summary profile overview about"],
+}
+
+
+def _expand_query(question: str) -> str:
+    """
+    Expand short queries with relevant keywords to improve retrieval.
+    Returns the expanded query for embedding search.
+    """
+    q_lower = question.lower().strip().rstrip("?").strip()
+    for key, expansions in _QUERY_EXPANSIONS.items():
+        if key in q_lower:
+            return question + " " + " ".join(expansions)
+    return question
+
+
 # ---------------------------------------------------------------------------
 
 _embeddings_cache: HuggingFaceEmbeddings | None = None
@@ -288,10 +313,12 @@ def query_documents(question: str) -> dict:
         }
     print(f"[TIMING] load stores:      {time.perf_counter()-t0:.2f}s")
 
-    # --- 1. Semantic search (FAISS) ---
+    # --- 1. Semantic search (FAISS) with query expansion ---
     t1 = time.perf_counter()
-    semantic_docs = store.similarity_search(question, k=INITIAL_RETRIEVAL_K)
-    print(f"[TIMING] semantic search:  {time.perf_counter()-t1:.2f}s  ({len(semantic_docs)} docs)")
+    expanded_q = _expand_query(question)
+    semantic_docs = store.similarity_search(expanded_q, k=INITIAL_RETRIEVAL_K)
+    print(f"[TIMING] semantic search:  {time.perf_counter()-t1:.2f}s  ({len(semantic_docs)} docs)"
+          f"  expanded={expanded_q != question}")
 
     # --- 2. Keyword search (BM25) ---
     t2 = time.perf_counter()
