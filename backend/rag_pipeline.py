@@ -354,11 +354,33 @@ def _format_chunk(doc) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Greeting / chitchat detection — skip RAG for non-document queries
+# ---------------------------------------------------------------------------
+
+_GREETINGS = {
+    "hi", "hello", "hey", "hii", "hiii", "good morning", "good afternoon",
+    "good evening", "howdy", "sup", "yo", "thanks", "thank you", "bye",
+    "goodbye", "ok", "okay", "cool", "nice", "great",
+}
+
+_GREETING_RESPONSE = "Hello! Ask me anything about the uploaded document."
+
+
+def _is_greeting(question: str) -> bool:
+    q = question.lower().strip().rstrip("!.?").strip()
+    return q in _GREETINGS
+
+
+# ---------------------------------------------------------------------------
 # Query — Hybrid retrieval + Cross-encoder reranking
 # ---------------------------------------------------------------------------
 
 def query_documents(question: str, chat_history: list | None = None) -> dict:
     t0 = time.perf_counter()
+
+    # --- Quick exit for greetings/chitchat ---
+    if _is_greeting(question):
+        return {"answer": _GREETING_RESPONSE, "sources": [], "cached": False}
 
     # --- 0a. Rewrite follow-up questions using conversation history ---
     resolved_question = _rewrite_with_history(question, chat_history or [])
