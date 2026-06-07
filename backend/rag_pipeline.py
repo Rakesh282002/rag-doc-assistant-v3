@@ -1,6 +1,7 @@
 ﻿import os
 import time
 import pickle
+import datetime
 
 import numpy as np
 
@@ -30,6 +31,8 @@ CHUNKS_PATH = os.path.join(VECTOR_STORE_DIR, "chunks.pkl")
 
 RAG_PROMPT_TEMPLATE = """You are a precise document analyst. Answer the question using ONLY the retrieved passages below.
 
+Today's date: {today}
+
 Retrieved passages:
 {context}
 
@@ -42,7 +45,7 @@ Rules:
 4. Do NOT mention "chunks", "passages", or "documents" in your answer.
 5. When multiple passages contribute, synthesize them into a single coherent answer.
 6. For skills/certifications/experience, list ALL items found in the passages — do not summarize or omit.
-7. You MAY perform simple arithmetic on explicitly stated values (e.g. counting years from date ranges).
+7. You MAY perform simple arithmetic on explicitly stated values (e.g. counting years from date ranges). Use today's date to calculate durations for ongoing/present positions.
 8. If conversation history is provided, use it to understand follow-up intent. Do NOT repeat an answer already given — provide the NEXT or DIFFERENT item requested.
 9. When mentioning a company/role, if the passages indicate it is the current/present job (e.g. "Present", "Current", "till date", ongoing date range), clearly state "(currently working)" alongside it.
 
@@ -472,7 +475,7 @@ def query_documents(question: str, chat_history: list | None = None) -> dict:
     last_exc = None
     for attempt in range(2):
         try:
-            answer = chain.invoke({"context": context, "question": resolved_question, "conversation_context": conv_context})
+            answer = chain.invoke({"context": context, "question": resolved_question, "conversation_context": conv_context, "today": datetime.date.today().strftime("%B %d, %Y")})
             break
         except Exception as exc:
             last_exc = exc
