@@ -10,7 +10,10 @@ import uuid
 import json
 import shutil
 import tempfile
+import threading
+import time
 
+import requests
 import streamlit as st
 
 # Ensure project root is on path for imports
@@ -20,6 +23,27 @@ from backend.config import UPLOAD_DIR, DOCUMENTS_REGISTRY, VECTOR_STORE_DIR, GOO
 from backend.document_processor import load_document, split_documents, SUPPORTED_EXTENSIONS
 from backend.rag_pipeline import add_to_vector_store, query_documents
 from backend.semantic_cache import get_cache
+
+# ---------------------------------------------------------------------------
+# Keep-alive: prevent Streamlit Cloud from sleeping due to inactivity
+# ---------------------------------------------------------------------------
+
+APP_URL = os.environ.get("STREAMLIT_APP_URL", "")
+
+def _keep_alive():
+    """Background thread that pings the app URL every 14 minutes."""
+    while True:
+        time.sleep(14 * 60)  # 14 minutes
+        if APP_URL:
+            try:
+                requests.get(APP_URL, timeout=10)
+            except Exception:
+                pass
+
+if APP_URL and "keep_alive_started" not in st.session_state:
+    st.session_state["keep_alive_started"] = True
+    t = threading.Thread(target=_keep_alive, daemon=True)
+    t.start()
 
 # ---------------------------------------------------------------------------
 # Registry helpers
