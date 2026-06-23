@@ -374,6 +374,46 @@ def _is_greeting(question: str) -> bool:
     return q in _GREETINGS
 
 
+def _is_name_question(question: str) -> bool:
+    q = question.lower().strip().rstrip("?.!")
+    if "name" not in q:
+        return False
+    return any(token in q for token in ("candidate", "person", "his", "her", "full name", "what is", "what was"))
+
+
+def _extract_candidate_name(chunks: list) -> tuple[str, object] | tuple[None, None]:
+    # Prefer explicit metadata produced by resume chunking.
+    for doc in chunks:
+        name = (doc.metadata or {}).get("name", "")
+        if isinstance(name, str) and name.strip():
+            return name.strip(), doc
+
+    # Fallback: infer from first line of header-like chunks.
+    for doc in chunks:
+        section = (doc.metadata or {}).get("section", "")
+        if section in {"header", "summary"}:
+            first_line = next((ln.strip() for ln in doc.page_content.splitlines() if ln.strip()), "")
+            if first_line and any(ch.isalpha() for ch in first_line) and len(first_line) <= 80:
+                return first_line, doc
+
+    # Last-resort scan: find a likely person-name line in early chunk lines.
+    for doc in chunks:
+        for line in doc.page_content.splitlines()[:6]:
+            ln = line.strip()
+            if not ln or len(ln) > 80:
+                continue
+            if any(marker in ln.lower() for marker in ("@", "http", "www", "linkedin", "github")):
+                continue
+            if any(ch.isdigit() for ch in ln):
+                continue
+            words = ln.split()
+            if 2 <= len(words) <= 4 and all(w.isalpha() for w in words):
+                if all(w[:1].isupper() for w in words):
+                    return ln, doc
+
+    return None, None
+
+
 # ---------------------------------------------------------------------------
 # Query — Hybrid retrieval + Cross-encoder reranking
 # ---------------------------------------------------------------------------
@@ -410,6 +450,22 @@ def query_documents(question: str, chat_history: list | None = None) -> dict:
             "answer": "No documents have been uploaded yet. Please upload a document first.",
             "sources": [],
         }
+
+    # High-confidence direct path for candidate-name questions.
+    if _is_name_question(resolved_question):
+        name, name_doc = _extract_candidate_name(all_chunks)
+        if name:
+            sources = [{
+                "content": name_doc.page_content[:400] + ("..." if len(name_doc.page_content) > 400 else ""),
+                "source": name_doc.metadata.get("source", "Unknown"),
+                "page": name_doc.metadata.get("page", "N/A"),
+            }]
+            answer = f"The candidate's name is {name}."
+            result = {"answer": answer, "sources": sources, "cached": False}
+            get_cache().set(q_embedding, resolved_question, answer, sources)
+            print(f"[TIMING] direct name answer: {time.perf_counter()-t0:.2f}s")
+            return result
+
     print(f"[TIMING] load stores:      {time.perf_counter()-t0:.2f}s")
 
     # --- 1. Semantic search (FAISS) with query expansion ---

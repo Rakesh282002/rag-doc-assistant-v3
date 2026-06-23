@@ -240,10 +240,30 @@ def _extract_role_metadata(role_text: str) -> dict:
 
 
 def _extract_name(pre_text: str) -> str:
-    for line in [ln.strip() for ln in pre_text.splitlines() if ln.strip()][:3]:
+    lines = [ln.strip() for ln in pre_text.splitlines() if ln.strip()][:8]
+    if not lines:
+        return ""
+
+    # Prefer a human-name looking line, skip obvious contact lines.
+    contact_markers = {"@", "http", "www", "+", "linkedin", "github", "gmail"}
+    for line in lines:
+        lower = line.lower()
+        if any(marker in lower for marker in contact_markers):
+            continue
+        if re.search(r"\d", line):
+            continue
         if re.match(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}$", line):
             return line
-    return pre_text.splitlines()[0].strip() if pre_text.strip() else ""
+        if re.match(r"^[A-Z]{2,}(?:\s[A-Z]{2,}){1,3}$", line):
+            return line.title()
+
+    # Fallback: first non-contact line.
+    for line in lines:
+        lower = line.lower()
+        if not any(marker in lower for marker in contact_markers):
+            return line
+
+    return lines[0]
 
 
 def _extract_skills_list(skills_text: str) -> str:
