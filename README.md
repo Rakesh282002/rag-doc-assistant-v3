@@ -367,3 +367,127 @@ rm -rf vector_store/
 ```
 
 Then re-upload all documents through the UI.
+
+---
+
+## MCP Integration — Web Search for Location Queries
+
+**v4 Feature:** This project now includes **Model Context Protocol (MCP)** integration with web search capabilities. When you ask questions about locations or entities mentioned in your documents, the system can augment answers with real-time web search results.
+
+### Web Search Features
+
+#### 1. **Location Detection**
+- Automatically detects location-related queries:
+  - "Where is [company] located?"
+  - "What city is the office in?"
+  - "Climate in [location]?"
+  - "Distance to [location]?"
+
+#### 2. **Automatic Web Search Augmentation**
+- When document lacks location details → triggers web search
+- Searches for: tourist attractions, climate, coordinates, business info
+- Results merged seamlessly with document context
+
+#### 3. **User Query Examples**
+
+```
+User: Where is the company headquartered?
+
+[Document says: "Acme Corp is based in California"]
+
+AI Response:
+"The company is headquartered in California.
+
+---
+
+**Additional Information from Web Search:**
+Search results for 'California information details climate attractions':
+1. California — USA State Information
+   URL: https://example.com/california
+   Known for tech industry hub, diverse climate zones, major cities like SF and LA...
+```
+
+### How It Works
+
+**New Modules:**
+- `backend/web_search_tool.py` — DuckDuckGo web search (no API key needed)
+- `backend/location_detector.py` — Question intent analysis for location queries
+
+**Pipeline Integration:**
+1. User asks a question
+2. RAG retrieves document content
+3. LLM generates initial answer
+4. Location detector checks: is this a location query?
+5. If answer is incomplete/missing: trigger web search
+6. Augment answer with web results
+7. Return combined answer to user
+
+### Web Search Tools
+
+#### `web_search(query: str, max_results: int = 5) -> str`
+General-purpose web search using DuckDuckGo.
+```python
+from backend.web_search_tool import web_search
+
+results = web_search("Paris tourist attractions", max_results=3)
+print(results)
+```
+
+#### `search_location_info(location_name: str) -> str`
+Specialized location search that includes climate, attractions, details.
+```python
+from backend.web_search_tool import search_location_info
+
+location_details = search_location_info("London")
+print(location_details)
+```
+
+### Configuration
+
+**Enable/Disable Web Search:**
+Edit `backend/rag_pipeline.py` to control when web search is triggered:
+
+```python
+# In query_documents() function around line ~475:
+should_search, search_query = should_augment_with_web_search(answer, resolved_question)
+
+if should_search and search_query:
+    # Web search is triggered when:
+    # 1. Answer says "not mentioned in the document"
+    # 2. Question is location-related
+    # 3. Answer is very short (<100 chars)
+```
+
+### Dependencies Added
+
+```
+httpx>=0.25.0              # HTTP client for web requests (replaces requests)
+beautifulsoup4>=4.12.0     # HTML parsing for search results
+```
+
+### Limitations & Notes
+
+1. **Rate Limiting:** DuckDuckGo may rate-limit after many rapid requests. Add delays if needed.
+2. **No API Key Required:** Web search uses public DuckDuckGo endpoints (no authentication).
+3. **Accuracy:** Web search results are informational and should be validated by user.
+4. **Opt-in:** Web search only triggered for location queries or when document lacks info.
+5. **Performance:** Web search adds ~2-5 seconds per query (network latency).
+
+### Future Enhancements
+
+- [ ] Add weather API integration (Open-Meteo)
+- [ ] Caching web search results to reduce API calls
+- [ ] Configurable location search templates
+- [ ] Multi-source search (Google Custom Search, Bing)
+- [ ] Entity linking to improve location detection
+
+### Troubleshooting Web Search
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Web search not triggering | Question might not be detected as location query | Check `location_detector.py` keyword list |
+| "Error performing web search" | Network timeout or DuckDuckGo rate limit | Retry after a few seconds |
+| Incomplete location results | Search query too vague | More specific location names work better |
+| Web search results irrelevant | DuckDuckGo returned off-topic results | Refine the query or disable web search |
+
+---

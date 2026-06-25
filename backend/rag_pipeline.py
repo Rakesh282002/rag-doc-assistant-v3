@@ -25,6 +25,7 @@ from backend.config import (
     SCORE_GAP,
 )
 from backend.semantic_cache import get_cache
+from backend.location_detector import is_location_query, extract_location_from_query, should_augment_with_web_search, extract_location_from_answer, generate_maps_link
 
 FAISS_INDEX_PATH = os.path.join(VECTOR_STORE_DIR, "faiss_index")
 CHUNKS_PATH = os.path.join(VECTOR_STORE_DIR, "chunks.pkl")
@@ -505,6 +506,20 @@ def query_documents(question: str, chat_history: list | None = None) -> dict:
             })
 
     result = {"answer": answer, "sources": sources, "cached": False}
+
+    # --- 6b. Maps link augmentation for location queries ---
+    try:
+        # Append Google Maps link if a location is mentioned in the answer
+        if is_location_query(resolved_question):
+            current_answer = result["answer"]
+            detected_location = extract_location_from_answer(current_answer)
+            if detected_location:
+                maps_link = generate_maps_link(detected_location)
+                result["answer"] = f"{current_answer}\n\n{maps_link}"
+                print(f"[MAPS] Appended Google Maps link for: {detected_location}")
+    except Exception as e:
+        print(f"[MAPS] Error during maps link augmentation: {str(e)}")
+        result["maps_link_error"] = str(e)
 
     # --- 7. Store in semantic cache (skip "not found" answers) ---
     if "not mentioned in the document" not in answer.lower():
