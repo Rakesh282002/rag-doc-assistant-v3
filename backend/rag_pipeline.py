@@ -322,6 +322,13 @@ def _affinity_boost(question: str, doc) -> float:
     """Return a score boost when the question's topic aligns with the chunk's section."""
     q_words = set(question.lower().replace("?", " ").replace(",", " ").split())
     section = doc.metadata.get("section", "")
+
+    # If no section metadata, infer "header" for chunks starting with an all-caps name
+    if not section:
+        first_line = doc.page_content.strip().split("\n")[0].strip()
+        if first_line.isupper() and 2 <= len(first_line.split()) <= 5:
+            section = "header"
+
     for sec, keywords in _SECTION_AFFINITY.items():
         if q_words & keywords and sec == section:
             return _SECTION_BOOST
@@ -451,7 +458,16 @@ def query_documents(question: str, chat_history: list | None = None) -> dict:
     q_words = set(resolved_question.lower().replace("?", " ").split())
     if q_words & _HEADER_TRIGGER_WORDS:
         for chunk in all_chunks:
-            if chunk.metadata.get("section") == "header":
+            # Match by section metadata OR by content pattern (first chunk
+            # with a name-like start: all-caps or title-case on the first line)
+            is_header = chunk.metadata.get("section") == "header"
+            if not is_header:
+                first_line = chunk.page_content.strip().split("\n")[0].strip()
+                is_header = (
+                    first_line.isupper() and 2 <= len(first_line.split()) <= 5
+                    and chunk == all_chunks[0]  # only the very first chunk
+                )
+            if is_header:
                 key = chunk.page_content[:200]
                 if key not in seen_keys:
                     seen_keys.add(key)
