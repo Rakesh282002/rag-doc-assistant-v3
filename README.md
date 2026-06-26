@@ -1,53 +1,70 @@
-# AI Document Assistant — v3 (Gemini 3.1 Flash-Lite + Semantic Cache + Conversation Memory)
+# AI Document Assistant — v3 (Gemini 3.1 Flash-Lite + Semantic Cache + MCP Integration)
 
-A local RAG (Retrieval-Augmented Generation) application that lets you upload a document and ask natural-language questions about it. This v3 edition uses **Gemini 3.1 Flash-Lite** (`gemini-3.1-flash-lite`) — a stable, cost-efficient multimodal model — and includes a **semantic cache** layer that avoids redundant LLM calls, plus **conversation memory** for follow-up questions. Answers are grounded strictly in the uploaded content — no hallucination.
+A production-ready RAG (Retrieval-Augmented Generation) application that lets you upload a document and ask natural-language questions about it. Built with **Gemini 3.1 Flash-Lite**, **hybrid retrieval** (FAISS + BM25), **cross-encoder reranking**, **semantic caching**, **conversation memory**, and **MCP (Model Context Protocol)** integration for extended tool capabilities like web search and Google Maps links.
 
-### What's New in v3 (Latest)
+Answers are grounded strictly in the uploaded content — no hallucination.
 
-- **Conversation memory** — follow-up questions like "next company?" are resolved using chat history via LLM query rewriting.
-- **Single-document mode** — uploading a new document fully clears the previous one (vector store + cache), preventing stale data.
-- **Smart cache bypass** — conversation-dependent questions skip the cache to avoid incorrect cached responses.
-- **No caching of "not found"** — negative answers are never cached, preventing stale misses.
-- **Current employment indicator** — responses include "(currently working)" when applicable.
-- **LLM upgrade** — `gemini-3.1-flash-lite` for stability and cost efficiency.
-- **Semantic caching** — repeated or similar questions are served from cache (cosine similarity + LLM validation).
+---
+
+## Key Features
+
+| Feature | Description |
+|---|---|
+| **Hybrid Retrieval** | FAISS semantic search + BM25 keyword search for comprehensive document coverage |
+| **Cross-Encoder Reranking** | `ms-marco-MiniLM-L-6-v2` reranks candidates for precise relevance scoring |
+| **Section Affinity Boost** | +2.5 score bonus when question topic aligns with chunk section (experience, skills, header, etc.) |
+| **Header Chunk Injection** | Identity/contact queries always retrieve the document header — even without metadata |
+| **Semantic Caching** | Cosine similarity + LLM validation avoids redundant API calls for repeated/similar questions |
+| **Conversation Memory** | LLM-based query rewriting resolves follow-up references (next, previous, that, etc.) |
+| **MCP Integration** | Web search (DuckDuckGo) and Google Maps link generation via Model Context Protocol tools |
+| **Location Detection** | Auto-detects location queries and augments answers with Maps links |
+| **Single-Document Mode** | Uploading a new document fully clears previous data (vector store + cache) |
+| **Keep-Alive** | Background health pings prevent Streamlit Cloud from sleeping |
 
 ### Performance Metrics
 
-> Achieved 100% Recall@K and improved answer faithfulness by 14% using hybrid retrieval (FAISS + BM25) and cross-encoder reranking; reduced latency by 60% via semantic caching.
+> Achieved **100% Recall@K** and improved answer faithfulness by **14%** using hybrid retrieval (FAISS + BM25) and cross-encoder reranking; reduced latency by **60%** via semantic caching.
 
 ---
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Streamlit UI  (:8501)                    │
-│  Sidebar: upload / manage docs    Main: chat interface          │
-└───────────────────────┬─────────────────────────────────────────┘
-                        │  HTTP (REST)
-┌───────────────────────▼─────────────────────────────────────────┐
-│                     FastAPI Backend  (:8000)                     │
-│  POST /upload   GET /documents   DELETE /documents/{id}         │
-│  POST /ask                                                       │
-└───────────┬──────────────────────────────┬──────────────────────┘
-            │                              │
-    ┌───────▼────────┐            ┌────────▼────────────┐
-    │ document_       │            │  rag_pipeline.py    │
-    │ processor.py    │            │                     │
-    │                 │            │  1. Semantic cache   │
-    │  Resume:        │            │     check (hit →    │
-    │  section/role   │   chunks   │     return cached)  │
-    │  chunking  ─────┼──────────► │  2. FAISS semantic  │
-    │                 │            │     search          │
-    │  Generic:       │            │  3. BM25 keyword    │
-    │  Recursive      │            │     search          │
-    │  splitter       │            │  4. Merge + dedup   │
-    │                 │            │  5. Cross-encoder   │
-    │                 │            │     reranking       │
-    │                 │            │  6. Gemini LLM      │
-    │                 │            │  7. Cache result    │
-    └─────────────────┘            └─────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Streamlit UI  (:8501 / :8502)                    │
+│   Sidebar: upload / manage docs / clear cache    Main: chat         │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────────────┐
+│                      RAG Pipeline (backend/)                         │
+│                                                                     │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────────────┐  │
+│  │ Semantic     │  │ Conversation │  │ Retrieval                 │  │
+│  │ Cache        │  │ Memory       │  │                           │  │
+│  │ (cosine +   │  │ (LLM query   │  │  1. FAISS (k=15)         │  │
+│  │  LLM valid) │  │  rewriter)   │  │  2. BM25 (k=15)          │  │
+│  └──────┬──────┘  └──────┬───────┘  │  3. Merge + header inject│  │
+│         │                 │          │  4. Cross-encoder rerank  │  │
+│    hit? │            rewrite?        │  5. Section affinity      │  │
+│    ↓YES │                 │          │  6. Score gap filter      │  │
+│  return │                 ↓          └───────────┬───────────────┘  │
+│         └────────────────►──────────────────────►│                  │
+│                                                  ↓                  │
+│                                     Gemini 3.1 Flash-Lite (LLM)     │
+│                                                  │                  │
+│                                     ┌────────────▼──────────────┐   │
+│                                     │  MCP Location Enrichment  │   │
+│                                     │  (Maps link if location   │   │
+│                                     │   query detected)         │   │
+│                                     └───────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+                            │
+              ┌─────────────▼──────────────────┐
+              │      MCP Server (stdio/SSE)     │
+              │  Tools: web_search,             │
+              │  search_location_info,          │
+              │  generate_maps_link             │
+              └────────────────────────────────┘
 ```
 
 ### Key Design Decisions
@@ -62,6 +79,7 @@ A local RAG (Retrieval-Augmented Generation) application that lets you upload a 
 | Keyword search | BM25 | Catches exact-match queries that semantic search misses |
 | Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2` (local) | Precise relevance scoring, no API calls |
 | Document chunking | Section/role-aware (resumes) + recursive (generic) | Preserves logical boundaries |
+| MCP transport | stdio (local) / SSE (remote on Render) | Flexible deployment — subprocess or persistent server |
 | Document mode | Single-document replacement | Prevents stale data from old uploads |
 
 ---
@@ -74,12 +92,16 @@ rag-doc-assistant-v3/
 │   ├── __init__.py
 │   ├── config.py               # All tunable settings in one place
 │   ├── document_processor.py   # Loaders + smart chunking (resume-aware)
-│   ├── rag_pipeline.py         # Retrieval, reranking, conversation memory, LLM chain
+│   ├── rag_pipeline.py         # Hybrid retrieval, reranking, LLM chain, MCP augmentation
 │   ├── semantic_cache.py       # Semantic caching layer (cosine + LLM validation)
+│   ├── location_detector.py    # Detects location queries for web search enrichment
+│   ├── mcp_server.py           # MCP server — exposes web_search, maps tools
+│   ├── mcp_client.py           # MCP client — connects via stdio/SSE/streamable-http
+│   ├── web_search_tool.py      # DuckDuckGo web search (standalone fallback)
 │   └── main.py                 # FastAPI app + REST endpoints
 ├── frontend/
 │   └── app.py                  # Streamlit chat UI (standalone mode)
-├── streamlit_app.py            # Unified Streamlit app (for Streamlit Cloud deployment)
+├── streamlit_app.py            # Unified Streamlit app (Streamlit Cloud / local)
 ├── evaluation/
 │   ├── evaluate.py             # RAG evaluation framework
 │   ├── test_set.json           # Test questions + expected answers
@@ -160,16 +182,16 @@ All settings live in `backend/config.py`:
 
 ## How It Works
 
-### Upload flow
+### Upload Flow
 
 ```
 File upload
     │
     ▼
-load_document()          ← PyPDFLoader / Docx2txtLoader / TextLoader
+load_document()              ← PyPDFLoader / Docx2txtLoader / TextLoader
     │
     ▼
-split_documents()        ← resume-aware or generic chunking
+split_documents()            ← resume-aware or generic chunking
     │
     ▼
 add_to_vector_store()
@@ -177,81 +199,129 @@ add_to_vector_store()
     └── append raw chunks → chunks.pkl  (for BM25)
 ```
 
-### Query flow
+### Query Flow
 
 ```
 User question
     │
     ▼
-Conversation rewrite             ← resolves follow-ups using chat history
-    │ (standalone → unchanged)
-    │ (follow-up → rewritten to standalone query)
+Greeting detection                ← skip RAG for "hi", "thanks", etc.
+    │
     ▼
-Semantic cache lookup            ← cosine sim + LLM validation (skipped for follow-ups)
+Conversation rewrite              ← LLM resolves follow-ups using chat history
+    │ (standalone → unchanged)
+    │ (follow-up → rewritten to broad standalone query)
+    ▼
+Semantic cache lookup             ← cosine sim + LLM validation (skipped for follow-ups)
     │ (hit → return cached answer)
     │ (miss ↓)
     ▼
-FAISS similarity_search(k=15)   ← semantic candidates (with query expansion)
+Query expansion                   ← "name" → "full name candidate name person name..."
+    │
+    ▼
+FAISS similarity_search(k=15)    ← semantic candidates
     +
-BM25Retriever.invoke(k=15)      ← keyword candidates
+BM25Retriever.invoke(k=15)       ← keyword candidates
     │
     ▼
-Merge + deduplicate              ← by first 200 chars of content
+Merge + deduplicate               ← by first 200 chars of content
+    + header chunk injection      ← force-include header for identity/contact queries
     │
     ▼
-CrossEncoder.predict()           ← score every candidate against question
-    + section affinity boost     ← +2.5 when question topic matches chunk section
+CrossEncoder.predict()            ← score every candidate against question
+    + section affinity boost      ← +2.5 when question topic matches chunk section
+    + content-based inference     ← detect header by all-caps first line when no metadata
     │
     ▼
-Keep top-5 within SCORE_GAP      ← drop outlier chunks
+Keep top-5 within SCORE_GAP       ← drop outlier chunks
     │
     ▼
-_format_chunk()                  ← prefix metadata labels (Company/Role/Period)
+_format_chunk()                   ← prefix metadata labels (Company/Role/Period/Section)
     │
     ▼
-Gemini LLM (LCEL chain)          ← strict grounded-answer prompt + conversation context
+Gemini LLM (LCEL chain)           ← strict grounded-answer prompt + conversation context
     │
     ▼
-Store in semantic cache           ← for future similar questions (skip "not found" answers)
+MCP location enrichment           ← append Maps link if location query detected
     │
     ▼
-{ answer, sources }
+Store in semantic cache            ← for future similar questions (skip "not found" answers)
+    │
+    ▼
+{ answer, sources, mcp_tool_used? }
+```
+
+---
+
+## MCP (Model Context Protocol) Integration
+
+The application includes an MCP server that exposes external tools, enabling the RAG pipeline to augment answers with live data.
+
+### MCP Server Tools
+
+| Tool | Description |
+|---|---|
+| `web_search` | Search the web via DuckDuckGo (up to 10 results) |
+| `search_location_info` | Search for location-specific details (attractions, climate, weather) |
+| `generate_maps_link` | Generate a clickable Google Maps link for a location |
+
+### Transport Modes
+
+| Mode | Use Case | Config |
+|---|---|---|
+| **stdio** | Local development (auto-spawns subprocess) | Default when `MCP_SERVER_URL` is unset |
+| **SSE** | Persistent remote server (e.g., Render) | Set `MCP_SERVER_URL=http://host:port/sse` |
+| **Streamable HTTP** | Modern MCP protocol over HTTP | Set `MCP_SERVER_URL=http://host:port/mcp` |
+
+### How Location Augmentation Works
+
+1. After the LLM generates an answer, `location_detector.py` checks if the question is location-related
+2. If yes, it extracts the location entity from the answer
+3. Calls `generate_maps_link` via MCP to generate a Google Maps URL
+4. Appends the clickable link to the answer
+
+### Running MCP Server Standalone
+
+```bash
+# SSE mode (persistent HTTP service)
+python -m backend.mcp_server --transport sse --port 8000
+
+# stdio mode (used internally as subprocess)
+python -m backend.mcp_server --transport stdio
 ```
 
 ---
 
 ## Document Chunking
 
-### Resume / CV documents (auto-detected)
+### Resume / CV Documents (Auto-Detected)
 
 The processor detects resumes by scanning for ≥2 of these signals in the first 3000 characters: `professional summary`, `professional experience`, `core competencies`, `technical skills`, `education`, `certifications`.
 
 When detected, it applies a **3-stage strategy**:
 
-1. **Section splitting** — regex finds standalone section headers (`PROFESSIONAL SUMMARY`, `CORE COMPETENCIES`, `TECHNICAL SKILLS`, `PROFESSIONAL EXPERIENCE`, `CERTIFICATIONS`, `EDUCATION`, etc.) and splits the document there.
+1. **Section splitting** — regex finds standalone section headers and splits the document at each one.
 
-2. **Role-level splitting** — within the experience section, each job entry becomes its own chunk. The splitter detects job boundaries by the pattern `Company | Role` or `Company – Role` followed by a date.
+2. **Role-level splitting** — within the experience section, each job entry becomes its own chunk (detected by `Company | Role` pattern followed by a date).
 
 3. **Metadata enrichment** — every chunk carries structured metadata:
-   - `section` — which resume section (experience, skills, education, certifications, header, etc.)
-   - `company` — company name (for experience chunks)
-   - `role` — job title (for experience chunks)
-   - `years` — date range (for experience chunks)
-   - `name` — candidate name (for header chunk)
-   - `skills` — extracted skills list (for skills chunk)
+   - `section` — resume section (experience, skills, education, certifications, header, etc.)
+   - `company` — company name (experience chunks)
+   - `role` — job title (experience chunks)
+   - `years` — date range (experience chunks)
+   - `name` — candidate name (header chunk)
+   - `skills` — extracted skills list (skills chunk)
    - `source` — path to the uploaded file
 
-   This metadata is prepended as a label when the chunk is shown to the LLM:
-   ```
-   [Company: HealthEdge Software Pvt Ltd | Role: Software Engineer | Period: Jan 2024 – Present]
-   <raw chunk text>
-   ```
+4. **Secondary split** — oversized section chunks are further split with `RecursiveCharacterTextSplitter`.
 
-4. **Secondary split** — any section chunk still larger than `CHUNK_SIZE` is further split with `RecursiveCharacterTextSplitter`.
-
-### Generic documents
+### Generic Documents
 
 Uses `RecursiveCharacterTextSplitter` with separators `["\n\n", "\n", ".", " ", ""]`, producing overlapping windows of `CHUNK_SIZE` characters.
+
+### Header Detection Without Metadata
+
+When documents are processed with the generic chunker (no resume metadata), the pipeline still identifies the header chunk at query time by detecting an all-caps first line with 2–5 words in the first chunk. This ensures identity queries ("what is the name?") always work.
 
 ---
 
@@ -324,25 +394,60 @@ The LLM is given strict rules in its system prompt:
 7. If conversation history is provided, do NOT repeat previously given answers.
 8. When mentioning a company/role, indicate "(currently working)" if the document shows it's the present job.
 
-Additionally, the cross-encoder reranker with section affinity boost filters out irrelevant chunks, so the LLM only sees the most relevant context.
+The cross-encoder reranker with section affinity boost filters out irrelevant chunks, so the LLM only sees the most relevant context.
 
 ---
 
 ## Dependencies
 
 ```
-fastapi, uvicorn          — REST API server
-langchain-*               — LLM orchestration (LCEL pipeline)
-langchain-google-genai    — Gemini LLM integration
-langchain-huggingface     — Local HuggingFace embeddings
-langchain-community       — FAISS vector store, BM25 retriever, document loaders
-faiss-cpu                 — Local vector similarity search
-sentence-transformers     — Cross-encoder reranker (ms-marco-MiniLM-L-6-v2)
-rank-bm25                 — BM25 keyword retrieval
-pypdf, python-docx        — PDF and Word document parsing
-streamlit                 — Chat UI
-python-dotenv             — .env file loading
+fastapi, uvicorn            — REST API server
+langchain-*                 — LLM orchestration (LCEL pipeline)
+langchain-google-genai      — Gemini LLM integration
+langchain-huggingface       — Local HuggingFace embeddings
+langchain-community         — FAISS vector store, BM25 retriever, document loaders
+faiss-cpu                   — Local vector similarity search
+sentence-transformers       — Cross-encoder reranker (ms-marco-MiniLM-L-6-v2)
+rank-bm25                   — BM25 keyword retrieval
+pypdf, python-docx          — PDF and Word document parsing
+streamlit                   — Chat UI
+python-dotenv               — .env file loading
+mcp                         — Model Context Protocol (client + server)
+httpx                       — HTTP client for MCP/web search
+beautifulsoup4              — HTML parsing for DuckDuckGo results
 ```
+
+---
+
+## Configuration Reference
+
+All settings live in `backend/config.py`:
+
+| Setting | Default | Description |
+|---|---|---|
+| `EMBEDDING_MODEL` | `BAAI/bge-base-en-v1.5` | HuggingFace bi-encoder for FAISS indexing (768-dim) |
+| `CROSS_ENCODER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Reranker model |
+| `LLM_MODEL` | `gemini-3.1-flash-lite` | Gemini 3.1 Flash-Lite (stable, cost-efficient) |
+| `LLM_TEMPERATURE` | `0.1` | Lower = more factual, less creative |
+| `CHUNK_SIZE` | `800` | Max characters per chunk |
+| `CHUNK_OVERLAP` | `150` | Overlap between consecutive chunks |
+| `INITIAL_RETRIEVAL_K` | `15` | Candidates fetched from each retriever |
+| `MAX_RETRIEVAL_DOCS` | `5` | Top chunks passed to LLM after reranking |
+| `SCORE_GAP` | `3.0` | Drop chunks more than this many points below the best reranker score |
+| `CACHE_CANDIDATE_FLOOR` | `0.55` | Min cosine similarity to trigger cache LLM validation |
+| `CACHE_TTL_DAYS` | `7` | Days before a cache entry expires |
+| `CACHE_MAX_SIZE` | `500` | Max cache entries (LRU eviction beyond this) |
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `GOOGLE_API_KEY` | Yes | Google AI Studio API key for Gemini |
+| `MCP_SERVER_URL` | No | Remote MCP server URL (leave unset for local stdio mode) |
+| `STREAMLIT_APP_URL` | No | Public app URL for keep-alive pings (Streamlit Cloud) |
+| `STREAMLIT_KEEPALIVE_ENABLED` | No | Enable/disable keep-alive (`true`/`false`, default `true`) |
 
 ---
 
@@ -351,10 +456,19 @@ python-dotenv             — .env file loading
 | Symptom | Cause | Fix |
 |---|---|---|
 | "No documents have been uploaded yet" | Vector store is empty | Upload a document first |
-| "This information is not mentioned" for a valid query | Retrieval missing the right chunk | Re-upload after clearing `vector_store/` |
+| "This information is not mentioned" for a valid query | Retrieval missing the right chunk | Clear cache (sidebar button) and re-upload |
+| "name of candidate?" returns wrong answer | Stale semantic cache entry | Click 🗑️ Clear Cache in sidebar |
 | `429 RESOURCE_EXHAUSTED` | Gemini daily quota hit | Wait ~1 min or switch `LLM_MODEL` in config |
 | `Cannot reach backend` in UI | FastAPI not running | Run `uvicorn backend.main:app --reload` |
-| Upload succeeds but wrong chunk count | Old vector store from previous chunking strategy | Delete `vector_store/` folder and re-upload |
+| Upload succeeds but wrong chunk count | Old vector store from previous chunking | Delete `vector_store/` folder and re-upload |
+| MCP tool errors in logs | MCP server not reachable | Check `MCP_SERVER_URL` or run server locally |
+
+---
+
+## GitHub Repository
+
+- **RAG App**: [github.com/Rakesh282002/rag-doc-assistant-v3](https://github.com/Rakesh282002/rag-doc-assistant-v3)
+- **MCP Server (Render deployment)**: [github.com/Rakesh282002/MCP_SERVER](https://github.com/Rakesh282002/MCP_SERVER)
 
 ### Reset the vector store
 
