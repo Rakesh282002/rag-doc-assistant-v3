@@ -32,7 +32,8 @@ python-dotenv>=1.0.1
 streamlit>=1.40.0
 requests>=2.32.3
 
-# Web search (MCP integration)
+# MCP (Model Context Protocol) integration
+mcp>=1.0.0
 httpx>=0.25.0
 beautifulsoup4>=4.12.0
 

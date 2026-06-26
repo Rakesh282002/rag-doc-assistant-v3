@@ -25,7 +25,8 @@ from backend.config import (
     SCORE_GAP,
 )
 from backend.semantic_cache import get_cache
-from backend.location_detector import is_location_query, extract_location_from_query, should_augment_with_web_search, extract_location_from_answer, generate_maps_link
+from backend.location_detector import is_location_query, extract_location_from_answer
+from backend.mcp_client import call_generate_maps_link
 
 FAISS_INDEX_PATH = os.path.join(VECTOR_STORE_DIR, "faiss_index")
 CHUNKS_PATH = os.path.join(VECTOR_STORE_DIR, "chunks.pkl")
@@ -72,6 +73,7 @@ Reply NO   — if one question asks to LIST or DESCRIBE and the other asks to CO
 Examples:
   "what were his achievements?"   vs  "achievements?"                     → YES  (same scope, shorter phrasing)
   "what was his working experience?" vs "working experience?"              → YES  (same scope)
+  "name of the person?"           vs  "name of the candidate?"            → YES  (person/candidate/applicant are synonyms)
   "working experience?"           vs  "working experience at healthedge?" → NO   (company filter added)
   "working experience at healthedge?" vs "working experience?"            → NO   (cached is narrower)
   "list his experience"           vs  "how many years of experience?"     → NO   (list vs calculate)
@@ -147,7 +149,7 @@ def _rewrite_with_history(question: str, chat_history: list) -> str:
 # ---------------------------------------------------------------------------
 
 _QUERY_EXPANSIONS: dict[str, list[str]] = {
-    "name": ["full name", "candidate name"],
+    "name": ["full name", "candidate name", "person name", "applicant identity"],
     "contact": ["phone number email address linkedin contact information"],
     "education": ["education degree university college bachelor masters"],
     "skills": ["technical skills programming languages tools technologies expertise"],
@@ -306,6 +308,11 @@ _SECTION_AFFINITY: dict[str, set[str]] = {
         "achievement", "achievements", "award", "awards", "recognition",
         "star", "performer", "accomplishment",
     },
+    "header": {
+        "name", "named", "called", "who", "person", "candidate", "applicant",
+        "contact", "email", "phone", "mobile", "linkedin", "address", "location",
+        "city", "lives", "residing", "based",
+    },
 }
 
 _SECTION_BOOST = 2.5   # added to cross-encoder score when section matches
@@ -434,6 +441,23 @@ def query_documents(question: str, chat_history: list | None = None) -> dict:
         if key not in seen_keys:
             seen_keys.add(key)
             candidates.append(doc)
+
+    # Always include header chunk for identity/contact queries so the
+    # name, address and contact details are never missed.
+    _HEADER_TRIGGER_WORDS = {
+        "name", "named", "called", "who", "person", "candidate", "applicant",
+        "contact", "email", "phone", "mobile", "linkedin", "address",
+    }
+    q_words = set(resolved_question.lower().replace("?", " ").split())
+    if q_words & _HEADER_TRIGGER_WORDS:
+        for chunk in all_chunks:
+            if chunk.metadata.get("section") == "header":
+                key = chunk.page_content[:200]
+                if key not in seen_keys:
+                    seen_keys.add(key)
+                    candidates.append(chunk)
+                    print("[RETRIEVAL] Injected header chunk for identity query")
+
     print(f"[TIMING] candidates after dedup: {len(candidates)}")
 
     # --- 4. Cross-encoder reranking + section-affinity boost + adaptive relevance filter ---
@@ -507,19 +531,19 @@ def query_documents(question: str, chat_history: list | None = None) -> dict:
 
     result = {"answer": answer, "sources": sources, "cached": False}
 
-    # --- 6b. Maps link augmentation for location queries ---
+    # --- 6b. MCP: Maps link augmentation for location queries ---
     try:
-        # Append Google Maps link if a location is mentioned in the answer
         if is_location_query(resolved_question):
             current_answer = result["answer"]
             detected_location = extract_location_from_answer(current_answer)
             if detected_location:
-                maps_link = generate_maps_link(detected_location)
+                maps_link = call_generate_maps_link(detected_location)
                 result["answer"] = f"{current_answer}\n\n{maps_link}"
-                print(f"[MAPS] Appended Google Maps link for: {detected_location}")
+                result["mcp_tool_used"] = "generate_maps_link"
+                print(f"[MCP] Called generate_maps_link for: {detected_location}")
     except Exception as e:
-        print(f"[MAPS] Error during maps link augmentation: {str(e)}")
-        result["maps_link_error"] = str(e)
+        print(f"[MCP] Error calling MCP tool: {str(e)}")
+        result["mcp_error"] = str(e)
 
     # --- 7. Store in semantic cache (skip "not found" answers) ---
     if "not mentioned in the document" not in answer.lower():
