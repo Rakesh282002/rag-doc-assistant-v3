@@ -10,10 +10,8 @@ import uuid
 import json
 import shutil
 import tempfile
-import threading
 import time
 
-import requests
 import streamlit as st
 
 # Ensure project root is on path for imports
@@ -23,58 +21,6 @@ from backend.config import UPLOAD_DIR, DOCUMENTS_REGISTRY, VECTOR_STORE_DIR, GOO
 from backend.document_processor import load_document, split_documents, SUPPORTED_EXTENSIONS
 from backend.rag_pipeline import add_to_vector_store, query_documents
 from backend.semantic_cache import get_cache
-
-# ---------------------------------------------------------------------------
-# Keep-alive: prevent Streamlit Cloud from sleeping due to inactivity
-# ---------------------------------------------------------------------------
-
-APP_URL = os.environ.get("STREAMLIT_APP_URL", "")
-KEEPALIVE_ENABLED = os.environ.get("STREAMLIT_KEEPALIVE_ENABLED", "true").lower() == "true"
-KEEPALIVE_INTERVAL_HOURS = float(os.environ.get("STREAMLIT_KEEPALIVE_INTERVAL_HOURS", "1"))
-KEEPALIVE_LOCAL_HOST = os.environ.get("STREAMLIT_KEEPALIVE_LOCAL_HOST", "127.0.0.1")
-KEEPALIVE_LOCAL_PORT = int(os.environ.get("STREAMLIT_SERVER_PORT", os.environ.get("PORT", "8501")))
-
-_keepalive_lock = threading.Lock()
-_keepalive_started = False
-
-
-def _build_health_url(base_url: str) -> str:
-    """Build Streamlit health endpoint URL from public URL or localhost fallback."""
-    if base_url:
-        return f"{base_url.rstrip('/')}/_stcore/health"
-    return f"http://{KEEPALIVE_LOCAL_HOST}:{KEEPALIVE_LOCAL_PORT}/_stcore/health"
-
-def _keep_alive():
-    """Background thread that periodically pings app health endpoint."""
-    interval_seconds = max(int(KEEPALIVE_INTERVAL_HOURS * 3600), 300)
-    target_url = _build_health_url(APP_URL)
-    while True:
-        time.sleep(interval_seconds)
-        try:
-            requests.get(target_url, timeout=10)
-            print(f"[KEEPALIVE] Health ping success: {target_url}")
-        except Exception as exc:
-            print(f"[KEEPALIVE] Health ping failed: {exc}")
-
-def _start_keepalive_once() -> None:
-    """Start keepalive thread once per Python process."""
-    global _keepalive_started
-    if not KEEPALIVE_ENABLED:
-        return
-
-    with _keepalive_lock:
-        if _keepalive_started:
-            return
-        t = threading.Thread(target=_keep_alive, daemon=True, name="streamlit-keepalive")
-        t.start()
-        _keepalive_started = True
-        print(
-            f"[KEEPALIVE] Started: interval={KEEPALIVE_INTERVAL_HOURS}h "
-            f"target={_build_health_url(APP_URL)}"
-        )
-
-
-_start_keepalive_once()
 
 # ---------------------------------------------------------------------------
 # Registry helpers

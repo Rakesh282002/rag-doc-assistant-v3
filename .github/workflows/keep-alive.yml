@@ -1,0 +1,23 @@
+name: Keep Streamlit Alive
+
+on:
+  schedule:
+    # Ping every 25 minutes — Streamlit Cloud sleeps after ~30 min of inactivity
+    - cron: "*/25 * * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit App
+        run: |
+          echo "Pinging Streamlit app to prevent sleep..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "https://rag-doc-assistant-rakesh.streamlit.app/")
+          echo "Response code: $HTTP_CODE"
+          if [ "$HTTP_CODE" -eq 000 ]; then
+            echo "App may be waking up, retrying in 15s..."
+            sleep 15
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "https://rag-doc-assistant-rakesh.streamlit.app/")
+            echo "Retry response code: $HTTP_CODE"
+          fi
