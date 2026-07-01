@@ -2,22 +2,51 @@ name: Keep Streamlit Alive
 
 on:
   schedule:
-    # Ping every 25 minutes — Streamlit Cloud sleeps after ~30 min of inactivity
-    - cron: "*/25 * * * *"
+    # Run every 6 hours — Streamlit Cloud sleeps after 12 hours of no traffic
+    - cron: "0 */6 * * *"
   workflow_dispatch: # Allow manual trigger
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Streamlit App
+      - name: Install Playwright
         run: |
-          echo "Pinging Streamlit app to prevent sleep..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "https://rag-doc-assistant-rakesh.streamlit.app/")
-          echo "Response code: $HTTP_CODE"
-          if [ "$HTTP_CODE" -eq 000 ]; then
-            echo "App may be waking up, retrying in 15s..."
-            sleep 15
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "https://rag-doc-assistant-rakesh.streamlit.app/")
-            echo "Retry response code: $HTTP_CODE"
-          fi
+          pip install playwright
+          playwright install chromium
+
+      - name: Visit Streamlit app with headless browser
+        run: |
+          python -c "
+          import asyncio
+          from playwright.async_api import async_playwright
+
+          async def visit():
+              async with async_playwright() as p:
+                  browser = await p.chromium.launch()
+                  page = await browser.new_page()
+                  print('Loading Streamlit app...')
+                  try:
+                      await page.goto('https://rag-doc-assistant-rakesh.streamlit.app/', timeout=120000)
+                      # Wait for app to fully load (WebSocket established)
+                      await page.wait_for_timeout(15000)
+
+                      # Check if app is sleeping and click wake-up button if present
+                      wake_btn = page.locator('button:has-text(\"Yes, get this app back up\")')
+                      if await wake_btn.count() > 0:
+                          print('App is sleeping — clicking wake-up button...')
+                          await wake_btn.click()
+                          # Wait for app to boot
+                          await page.wait_for_timeout(60000)
+                          print('App woken up successfully!')
+                      else:
+                          print('App is awake — visit registered.')
+
+                      print(f'Page title: {await page.title()}')
+                  except Exception as e:
+                      print(f'Error: {e}')
+                  finally:
+                      await browser.close()
+
+          asyncio.run(visit())
+          "
