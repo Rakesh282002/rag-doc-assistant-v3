@@ -16,10 +16,14 @@ import os
 import sys
 from contextlib import asynccontextmanager
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-from mcp.client.sse import sse_client
-from mcp.client.streamable_http import streamablehttp_client
+try:
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+    from mcp.client.sse import sse_client
+    from mcp.client.streamable_http import streamablehttp_client
+    MCP_AVAILABLE = True
+except ImportError:
+    MCP_AVAILABLE = False
 
 
 # Path to the MCP server script (for stdio mode)
@@ -110,6 +114,8 @@ def call_generate_maps_link(location: str) -> str:
     Returns:
         Markdown-formatted Google Maps link
     """
+    if not MCP_AVAILABLE:
+        return ""
     return _run_async(_call_tool("generate_maps_link", {"location": location}))
 
 
@@ -123,6 +129,8 @@ def call_search_location_info(location_name: str) -> str:
     Returns:
         Web search results about the location
     """
+    if not MCP_AVAILABLE:
+        return ""
     return _run_async(_call_tool("search_location_info", {"location_name": location_name}))
 
 
@@ -137,6 +145,8 @@ def call_web_search(query: str, max_results: int = 5) -> str:
     Returns:
         Formatted search results
     """
+    if not MCP_AVAILABLE:
+        return ""
     return _run_async(
         _call_tool("web_search", {"query": query, "max_results": max_results})
     )
@@ -144,6 +154,8 @@ def call_web_search(query: str, max_results: int = 5) -> str:
 
 def list_available_tools() -> list:
     """List all tools exposed by the MCP server."""
+    if not MCP_AVAILABLE:
+        return []
 
     async def _list():
         async with _get_session() as session:
